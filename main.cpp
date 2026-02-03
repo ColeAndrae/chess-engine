@@ -1,3 +1,4 @@
+#include <climits>
 #include <iostream>
 #include <vector>
 
@@ -281,14 +282,38 @@ void playMove(Move move) {
   *(move.movedPiece) ^= move.to;
 }
 
-int main() {
-  for (int i = 0; i < 10; i++) {
-    std::vector<Move> moves = generateMoves(1);
-    playMove(moves[0]);
-    printBoard();
-    std::cout << "===================="
-              << "\n";
-  }
+int count = 0;
 
+int minimax(int depth, bool maximizingPlayer) {
+  count += 1;
+  if (depth == 0) {
+    return getScore();
+  }
+  if (maximizingPlayer) {
+    int maxEval = -INT_MAX;
+    std::vector<Move> moves = generateMoves(maximizingPlayer);
+    for (int i = 0; i < moves.size(); i++) {
+      playMove(moves[i]);
+      int eval = minimax(depth - 1, 0);
+      maxEval = std::max(maxEval, eval);
+      playMove(moves[i]);
+    }
+    return maxEval;
+  } else {
+    int minEval = INT_MAX;
+    std::vector<Move> moves = generateMoves(maximizingPlayer);
+    for (int i = 0; i < moves.size(); i++) {
+      playMove(moves[i]);
+      int eval = minimax(depth - 1, 0);
+      minEval = std::min(minEval, eval);
+      playMove(moves[i]);
+    }
+    return minEval;
+  }
+}
+
+int main() {
+  minimax(6, 1);
+  std::cout << count;
   return 0;
 }
