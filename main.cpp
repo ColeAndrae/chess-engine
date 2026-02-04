@@ -282,10 +282,7 @@ void playMove(Move move) {
   *(move.movedPiece) ^= move.to;
 }
 
-int count = 0;
-
-int minimax(int depth, bool maximizingPlayer) {
-  count += 1;
+int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   if (depth == 0) {
     return getScore();
   }
@@ -294,9 +291,13 @@ int minimax(int depth, bool maximizingPlayer) {
     std::vector<Move> moves = generateMoves(maximizingPlayer);
     for (int i = 0; i < moves.size(); i++) {
       playMove(moves[i]);
-      int eval = minimax(depth - 1, 0);
-      maxEval = std::max(maxEval, eval);
+      int eval = minimax(depth - 1, alpha, beta, 0);
       playMove(moves[i]);
+      maxEval = std::max(maxEval, eval);
+      alpha = std::max(alpha, eval);
+      if (beta <= alpha) {
+        break;
+      }
     }
     return maxEval;
   } else {
@@ -304,16 +305,20 @@ int minimax(int depth, bool maximizingPlayer) {
     std::vector<Move> moves = generateMoves(maximizingPlayer);
     for (int i = 0; i < moves.size(); i++) {
       playMove(moves[i]);
-      int eval = minimax(depth - 1, 0);
-      minEval = std::min(minEval, eval);
+      int eval = minimax(depth - 1, alpha, beta, 1);
       playMove(moves[i]);
+      minEval = std::min(minEval, eval);
+      beta = std::min(beta, eval);
+      if (beta <= alpha) {
+        break;
+      }
     }
     return minEval;
   }
 }
 
 int main() {
-  minimax(6, 1);
-  std::cout << count;
+  printBoard();
+  std::cout << minimax(8, -INT_MAX, INT_MAX, 1);
   return 0;
 }
