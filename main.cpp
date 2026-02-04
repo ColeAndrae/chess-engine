@@ -31,10 +31,21 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-std::vector<uint64_t> pieces = {whitePawns, whiteKnights, whiteBishops,
-                                whiteRooks, whiteQueens,  whiteKings,
-                                blackPawns, blackKnights, blackBishops,
-                                blackRooks, blackQueens,  blackKings};
+std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
+
+std::vector<uint64_t> endTiles = {BOTTOM_RANK,
+                                  TOP_RANK,
+                                  RIGHT_FILE,
+                                  LEFT_FILE,
+                                  (BOTTOM_RANK | RIGHT_FILE),
+                                  (TOP_RANK | LEFT_FILE),
+                                  (BOTTOM_RANK | LEFT_FILE),
+                                  (TOP_RANK | RIGHT_FILE)};
+
+std::vector<uint64_t *> pieces = {&whitePawns, &whiteKnights, &whiteBishops,
+                                  &whiteRooks, &whiteQueens,  &whiteKings,
+                                  &blackPawns, &blackKnights, &blackBishops,
+                                  &blackRooks, &blackQueens,  &blackKings};
 
 class Move {
 public:
@@ -49,8 +60,8 @@ public:
 
 uint64_t *findPiece(uint64_t tile) {
   for (int i = 0; i < 12; i++) {
-    if (pieces[i] & tile) {
-      return &pieces[i];
+    if (*pieces[i] & tile) {
+      return pieces[i];
     }
   }
   return 0;
@@ -225,7 +236,41 @@ void generateKnightMoves(std::vector<Move> *moves, bool color,
 }
 
 void generateSlidingMoves(std::vector<Move> *moves, bool color,
-                          uint64_t startTile) {}
+                          uint64_t startTile) {
+  int startDir = 0;
+  int endDir = 8;
+
+  if ((whiteBishops | blackBishops) & startTile) {
+    startDir = 4;
+  } else if ((whiteRooks | blackRooks) & startTile) {
+    endDir = 4;
+  }
+
+  for (int i = startDir; i < endDir; i++) {
+
+    if (endTiles[i] & startTile) {
+      continue;
+    }
+    uint64_t endTile = (directions[i] > 0 ? startTile << directions[i]
+                                          : startTile >> -directions[i]);
+    while (1) {
+      if ((color ? whitePieces : blackPieces) & endTile) {
+        break;
+      }
+      moves->push_back(
+          Move(startTile, endTile, findPiece(startTile), findPiece(endTile)));
+      if (((color ? blackPieces : whitePieces) & endTile) ||
+          endTiles[i] & endTile) {
+        break;
+      }
+      if (directions[i] > 0) {
+        endTile <<= directions[i];
+      } else {
+        endTile >>= -directions[i];
+      }
+    }
+  }
+}
 
 void generateKingMoves(std::vector<Move> *moves, bool color,
                        uint64_t startTile) {}
@@ -247,23 +292,21 @@ std::vector<Move> generateMoves(bool color) {
         generatePawnMoves(&moves, color, tile);
       } else if ((blackPawns & tile) && !color) {
         generatePawnMoves(&moves, color, tile);
-      } else if ((whiteKnights & tile) && color) {
+      }
+
+      if ((whiteKnights & tile) && color) {
         generateKnightMoves(&moves, color, tile);
       } else if ((blackKnights & tile) && !color) {
         generateKnightMoves(&moves, color, tile);
-      } else if ((whiteBishops & tile) && color) {
+      }
+
+      if (((whiteBishops | whiteRooks | whiteQueens) & tile) && color) {
         generateSlidingMoves(&moves, color, tile);
-      } else if ((blackBishops & tile) && !color) {
+      } else if (((blackBishops | blackRooks | blackQueens) & tile) && !color) {
         generateSlidingMoves(&moves, color, tile);
-      } else if ((whiteRooks & tile) && color) {
-        generateSlidingMoves(&moves, color, tile);
-      } else if ((blackRooks & tile) && !color) {
-        generateSlidingMoves(&moves, color, tile);
-      } else if ((whiteQueens & tile) && color) {
-        generateSlidingMoves(&moves, color, tile);
-      } else if ((blackQueens & tile) && !color) {
-        generateSlidingMoves(&moves, color, tile);
-      } else if ((whiteKings & tile) && color) {
+      }
+
+      if ((whiteKings & tile) && color) {
         generateKingMoves(&moves, color, tile);
       } else if ((blackKings & tile) && !color) {
         generateKingMoves(&moves, color, tile);
@@ -319,6 +362,6 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
 
 int main() {
   printBoard();
-  std::cout << minimax(8, -INT_MAX, INT_MAX, 1);
+  std::cout << generateMoves(0).size();
   return 0;
 }
