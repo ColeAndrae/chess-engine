@@ -260,7 +260,7 @@ void generateSlidingMoves(std::vector<Move> *moves, bool color,
       moves->push_back(
           Move(startTile, endTile, findPiece(startTile), findPiece(endTile)));
       if (((color ? blackPieces : whitePieces) & endTile) ||
-          endTiles[i] & endTile) {
+          (endTiles[i] & endTile) || ((whiteKings | blackKings) & startTile)) {
         break;
       }
       if (directions[i] > 0) {
@@ -300,9 +300,12 @@ std::vector<Move> generateMoves(bool color) {
         generateKnightMoves(&moves, color, tile);
       }
 
-      if (((whiteBishops | whiteRooks | whiteQueens) & tile) && color) {
+      if (((whiteBishops | whiteRooks | whiteQueens | whiteKings) & tile) &&
+          color) {
         generateSlidingMoves(&moves, color, tile);
-      } else if (((blackBishops | blackRooks | blackQueens) & tile) && !color) {
+      } else if (((blackBishops | blackRooks | blackQueens | blackKings) &
+                  tile) &&
+                 !color) {
         generateSlidingMoves(&moves, color, tile);
       }
 
@@ -362,6 +365,6 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
 
 int main() {
   printBoard();
-  std::cout << generateMoves(0).size();
+  std::cout << generateMoves(1).size();
   return 0;
 }
