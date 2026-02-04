@@ -31,6 +31,13 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
+const int MAX_DEPTH = 5;
+
+uint64_t from;
+uint64_t to;
+uint64_t *movedPiece;
+uint64_t *capturedPiece;
+
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
 std::vector<uint64_t> endTiles = {BOTTOM_RANK,
@@ -56,6 +63,14 @@ public:
 
   Move(uint64_t f, uint64_t t, uint64_t *mp, uint64_t *cp)
       : from(f), to(t), movedPiece(mp), capturedPiece(cp) {}
+};
+
+class State {
+public:
+  Move move;
+  int score;
+
+  State(Move m, int s) : move(m), score(s) {}
 };
 
 uint64_t *findPiece(uint64_t tile) {
@@ -247,7 +262,6 @@ void generateSlidingMoves(std::vector<Move> *moves, bool color,
   }
 
   for (int i = startDir; i < endDir; i++) {
-
     if (endTiles[i] & startTile) {
       continue;
     }
@@ -257,8 +271,10 @@ void generateSlidingMoves(std::vector<Move> *moves, bool color,
       if ((color ? whitePieces : blackPieces) & endTile) {
         break;
       }
+
       moves->push_back(
           Move(startTile, endTile, findPiece(startTile), findPiece(endTile)));
+
       if (((color ? blackPieces : whitePieces) & endTile) ||
           (endTiles[i] & endTile) || ((whiteKings | blackKings) & startTile)) {
         break;
@@ -335,10 +351,19 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   if (maximizingPlayer) {
     int maxEval = -INT_MAX;
     std::vector<Move> moves = generateMoves(maximizingPlayer);
+
     for (int i = 0; i < moves.size(); i++) {
       playMove(moves[i]);
       int eval = minimax(depth - 1, alpha, beta, 0);
       playMove(moves[i]);
+
+      if ((depth == MAX_DEPTH) && (eval > maxEval)) {
+        from = moves[i].from;
+        to = moves[i].to;
+        movedPiece = moves[i].movedPiece;
+        capturedPiece = moves[i].capturedPiece;
+      }
+
       maxEval = std::max(maxEval, eval);
       alpha = std::max(alpha, eval);
       if (beta <= alpha) {
@@ -349,10 +374,19 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   } else {
     int minEval = INT_MAX;
     std::vector<Move> moves = generateMoves(maximizingPlayer);
+
     for (int i = 0; i < moves.size(); i++) {
       playMove(moves[i]);
       int eval = minimax(depth - 1, alpha, beta, 1);
       playMove(moves[i]);
+
+      if ((depth == MAX_DEPTH) && (eval < minEval)) {
+        from = moves[i].from;
+        to = moves[i].to;
+        movedPiece = moves[i].movedPiece;
+        capturedPiece = moves[i].capturedPiece;
+      }
+
       minEval = std::min(minEval, eval);
       beta = std::min(beta, eval);
       if (beta <= alpha) {
@@ -364,7 +398,17 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
 }
 
 int main() {
+
   printBoard();
-  std::cout << generateMoves(1).size();
+
+  for (int i = 0; i < 20; i++) {
+    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, i & 1);
+    Move nextMove = Move(from, to, movedPiece, capturedPiece);
+    playMove(nextMove);
+    std::cout << "==============="
+              << "\n";
+    printBoard();
+  }
+
   return 0;
 }
