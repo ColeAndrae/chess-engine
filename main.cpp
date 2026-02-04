@@ -65,14 +65,6 @@ public:
       : from(f), to(t), movedPiece(mp), capturedPiece(cp) {}
 };
 
-class State {
-public:
-  Move move;
-  int score;
-
-  State(Move m, int s) : move(m), score(s) {}
-};
-
 uint64_t *findPiece(uint64_t tile) {
   for (int i = 0; i < 12; i++) {
     if (*pieces[i] & tile) {
@@ -288,9 +280,6 @@ void generateSlidingMoves(std::vector<Move> *moves, bool color,
   }
 }
 
-void generateKingMoves(std::vector<Move> *moves, bool color,
-                       uint64_t startTile) {}
-
 std::vector<Move> generateMoves(bool color) {
   std::vector<Move> moves;
 
@@ -323,12 +312,6 @@ std::vector<Move> generateMoves(bool color) {
                   tile) &&
                  !color) {
         generateSlidingMoves(&moves, color, tile);
-      }
-
-      if ((whiteKings & tile) && color) {
-        generateKingMoves(&moves, color, tile);
-      } else if ((blackKings & tile) && !color) {
-        generateKingMoves(&moves, color, tile);
       }
     }
   }
@@ -402,7 +385,7 @@ int main() {
   printBoard();
 
   for (int i = 0; i < 20; i++) {
-    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, i & 1);
+    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, (i + 1) & 1);
     Move nextMove = Move(from, to, movedPiece, capturedPiece);
     playMove(nextMove);
     std::cout << "==============="
