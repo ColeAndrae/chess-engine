@@ -1,6 +1,12 @@
 #include <climits>
+#include <cstdlib>
 #include <iostream>
+#include <random>
 #include <vector>
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_int_distribution<> distr(1, 100);
 
 uint64_t whitePawns = 0xff00;
 uint64_t whiteKnights = 0x42;
@@ -31,8 +37,31 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-const int MAX_DEPTH = 7;
-const int MOVE_COUNT = 40;
+const int MAX_DEPTH = 4;
+const int MOVE_COUNT = 300;
+
+const float SIGMA = 3.0;
+const float TEMPERATURE = 1.0;
+
+const std::vector<std::vector<int>> whitePawnMap = {
+    {200, 200, 210, 220, 220, 210, 200, 200},
+    {90, 90, 90, 120, 120, 100, 90, 90},
+    {80, 80, 90, 120, 120, 100, 80, 80},
+    {70, 70, 80, 100, 100, 80, 70, 70},
+    {60, 60, 60, 70, 70, 60, 60, 60},
+    {40, 40, 40, 50, 50, 40, 40, 40},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}};
+
+const std::vector<std::vector<int>> blackPawnMap = {
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {40, 40, 40, 50, 50, 40, 40, 40},
+    {60, 60, 60, 70, 70, 60, 60, 60},
+    {70, 70, 80, 100, 100, 80, 70, 70},
+    {80, 80, 90, 120, 120, 100, 80, 80},
+    {90, 90, 90, 120, 120, 100, 90, 90},
+    {200, 200, 210, 220, 220, 210, 200, 200}};
 
 uint64_t from;
 uint64_t to;
@@ -86,9 +115,9 @@ int getScore() {
       uint64_t tile = (1ULL << c) << (r * 8);
 
       if (whitePawns & tile) {
-        score += 100;
+        score += (100 + (whitePawnMap[r][c] * SIGMA));
       } else if (blackPawns & tile) {
-        score -= 100;
+        score -= (100 + (blackPawnMap[r][c] * SIGMA));
       } else if (whiteKnights & tile) {
         score += 300;
       } else if (blackKnights & tile) {
@@ -118,7 +147,7 @@ int getScore() {
   if (!blackKing) {
     score = INT_MAX;
   }
-  return score;
+  return score + (distr(gen) * TEMPERATURE);
 }
 
 void printBoard() {
