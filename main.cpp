@@ -31,7 +31,8 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-const int MAX_DEPTH = 5;
+const int MAX_DEPTH = 7;
+const int MOVE_COUNT = 40;
 
 uint64_t from;
 uint64_t to;
@@ -75,8 +76,10 @@ uint64_t *findPiece(uint64_t tile) {
 }
 
 int getScore() {
-
+  bool whiteKing = 0;
+  bool blackKing = 0;
   int score = 0;
+
   for (int r = 7; r >= 0; r--) {
     for (int c = 7; c >= 0; c--) {
 
@@ -102,8 +105,18 @@ int getScore() {
         score += 900;
       } else if (blackQueens & tile) {
         score -= 900;
+      } else if (whiteKings & tile) {
+        whiteKing = 1;
+      } else if (blackKings & tile) {
+        blackKing = 1;
       }
     }
+  }
+  if (!whiteKing) {
+    score = -INT_MAX;
+  }
+  if (!blackKing) {
+    score = INT_MAX;
   }
   return score;
 }
@@ -384,7 +397,7 @@ int main() {
 
   printBoard();
 
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < MOVE_COUNT; i++) {
     minimax(MAX_DEPTH, -INT_MAX, INT_MAX, (i + 1) & 1);
     Move nextMove = Move(from, to, movedPiece, capturedPiece);
     playMove(nextMove);
