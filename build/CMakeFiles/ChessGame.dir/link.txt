@@ -1,0 +1,1 @@
+/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/ChessGame.dir/main.cpp.o -o ChessGame   -L/opt/homebrew/lib  -Wl,-rpath,/opt/homebrew/lib -lsfml-graphics -lsfml-window -lsfml-system

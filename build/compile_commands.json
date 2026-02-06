@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/cole/Desktop/chess/build",
+  "command": "/usr/bin/c++  -I/opt/homebrew/include -std=gnu++17 -arch arm64 -o CMakeFiles/ChessGame.dir/main.cpp.o -c /Users/cole/Desktop/chess/main.cpp",
+  "file": "/Users/cole/Desktop/chess/main.cpp",
+  "output": "CMakeFiles/ChessGame.dir/main.cpp.o"
+}
+]

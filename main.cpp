@@ -1,3 +1,4 @@
+#include <SFML/Graphics.hpp>
 #include <climits>
 #include <iostream>
 #include <random>
@@ -37,7 +38,7 @@ const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
-const int MOVE_COUNT = 1000;
+const int MOVE_COUNT = 500;
 const float TEMPERATURE = 1.0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
