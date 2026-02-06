@@ -1,5 +1,4 @@
 #include <climits>
-#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <vector>
@@ -38,35 +37,8 @@ const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
-const int MOVE_COUNT = 300;
-
-const float SIGMA = 3.0;
+const int MOVE_COUNT = 1000;
 const float TEMPERATURE = 1.0;
-
-const std::vector<std::vector<int>> whitePawnMap = {
-    {200, 200, 210, 220, 220, 210, 200, 200},
-    {90, 90, 90, 120, 120, 100, 90, 90},
-    {80, 80, 90, 120, 120, 100, 80, 80},
-    {70, 70, 80, 100, 100, 80, 70, 70},
-    {60, 60, 60, 70, 70, 60, 60, 60},
-    {40, 40, 40, 50, 50, 40, 40, 40},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0}};
-
-const std::vector<std::vector<int>> blackPawnMap = {
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {0, 0, 0, 0, 0, 0, 0, 0},
-    {40, 40, 40, 50, 50, 40, 40, 40},
-    {60, 60, 60, 70, 70, 60, 60, 60},
-    {70, 70, 80, 100, 100, 80, 70, 70},
-    {80, 80, 90, 120, 120, 100, 80, 80},
-    {90, 90, 90, 120, 120, 100, 90, 90},
-    {200, 200, 210, 220, 220, 210, 200, 200}};
-
-uint64_t from;
-uint64_t to;
-uint64_t *movedPiece;
-uint64_t *capturedPiece;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -84,13 +56,17 @@ std::vector<uint64_t *> pieces = {&whitePawns, &whiteKnights, &whiteBishops,
                                   &blackPawns, &blackKnights, &blackBishops,
                                   &blackRooks, &blackQueens,  &blackKings};
 
+uint64_t from;
+uint64_t to;
+uint64_t *movedPiece;
+uint64_t *capturedPiece;
+
 class Move {
 public:
   uint64_t from;
   uint64_t to;
   uint64_t *movedPiece;
   uint64_t *capturedPiece;
-
   Move(uint64_t f, uint64_t t, uint64_t *mp, uint64_t *cp)
       : from(f), to(t), movedPiece(mp), capturedPiece(cp) {}
 };
@@ -115,9 +91,9 @@ int getScore() {
       uint64_t tile = (1ULL << c) << (r * 8);
 
       if (whitePawns & tile) {
-        score += (100 + (whitePawnMap[r][c] * SIGMA));
+        score += 100;
       } else if (blackPawns & tile) {
-        score -= (100 + (blackPawnMap[r][c] * SIGMA));
+        score -= 100;
       } else if (whiteKnights & tile) {
         score += 300;
       } else if (blackKnights & tile) {
@@ -357,7 +333,6 @@ std::vector<Move> generateMoves(bool color) {
       }
     }
   }
-
   return moves;
 }
 
@@ -427,7 +402,7 @@ int main() {
   printBoard();
 
   for (int i = 0; i < MOVE_COUNT; i++) {
-    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, (i + 1) & 1);
+    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, i % 2 == 0);
     Move nextMove = Move(from, to, movedPiece, capturedPiece);
     playMove(nextMove);
     std::cout << "==============="
