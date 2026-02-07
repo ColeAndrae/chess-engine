@@ -4,6 +4,20 @@
 #include <random>
 #include <vector>
 
+const sf::Texture whitePawnTexture("pieces/white-pawn.png");
+const sf::Texture whiteKnightTexture("pieces/white-knight.png");
+const sf::Texture whiteBishopTexture("pieces/white-bishop.png");
+const sf::Texture whiteRookTexture("pieces/white-rook.png");
+const sf::Texture whiteQueenTexture("pieces/white-queen.png");
+const sf::Texture whiteKingTexture("pieces/white-king.png");
+
+const sf::Texture blackPawnTexture("pieces/black-pawn.png");
+const sf::Texture blackKnightTexture("pieces/black-knight.png");
+const sf::Texture blackBishopTexture("pieces/black-bishop.png");
+const sf::Texture blackRookTexture("pieces/black-rook.png");
+const sf::Texture blackQueenTexture("pieces/black-queen.png");
+const sf::Texture blackKingTexture("pieces/black-king.png");
+
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_int_distribution<> distr(1, 100);
@@ -37,9 +51,9 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-const int MAX_DEPTH = 4;
+const int MAX_DEPTH = 5;
 const int MOVE_COUNT = 500;
-const float TEMPERATURE = 1.0;
+const float TEMPERATURE = 3.0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -398,18 +412,89 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   }
 }
 
-int main() {
+void drawBoard() {
+  int current_move = 0;
+  sf::RenderWindow window(sf::VideoMode({800, 800}), "SFML window");
+  sf::RectangleShape lightTile({100, 100});
+  sf::RectangleShape darkTile({100, 100});
+  lightTile.setFillColor(sf::Color(238, 238, 210));
+  darkTile.setFillColor(sf::Color(118, 150, 86));
 
-  printBoard();
+  while (window.isOpen()) {
+    while (const std::optional event = window.pollEvent()) {
+      if (event->is<sf::Event::Closed>())
+        window.close();
+    }
 
-  for (int i = 0; i < MOVE_COUNT; i++) {
-    minimax(MAX_DEPTH, -INT_MAX, INT_MAX, i % 2 == 0);
+    if (current_move <= MOVE_COUNT) {
+      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move % 2 == 0);
+      int current_score = getScore();
+    }
     Move nextMove = Move(from, to, movedPiece, capturedPiece);
     playMove(nextMove);
-    std::cout << "==============="
-              << "\n";
-    printBoard();
   }
 
+  window.clear();
+
+  for (int r = 0; r < 8; r++) {
+    for (int c = 0; c < 8; c++) {
+
+      bool empty = 0;
+      uint64_t tile = (1ULL << r) << (c * 8);
+      sf::Texture tileTexture;
+
+      if (whitePawns & tile) {
+        tileTexture = blackPawnTexture;
+      } else if (blackPawns & tile) {
+        tileTexture = whitePawnTexture;
+      } else if (whiteKnights & tile) {
+        tileTexture = blackKnightTexture;
+      } else if (blackKnights & tile) {
+        tileTexture = whiteKnightTexture;
+      } else if (whiteBishops & tile) {
+        tileTexture = blackBishopTexture;
+      } else if (blackBishops & tile) {
+        tileTexture = whiteBishopTexture;
+      } else if (whiteRooks & tile) {
+        tileTexture = blackRookTexture;
+      } else if (blackRooks & tile) {
+        tileTexture = whiteRookTexture;
+      } else if (whiteQueens & tile) {
+        tileTexture = blackQueenTexture;
+      } else if (blackQueens & tile) {
+        tileTexture = whiteQueenTexture;
+      } else if (whiteKings & tile) {
+        tileTexture = blackKingTexture;
+      } else if (blackKings & tile) {
+        tileTexture = whiteKingTexture;
+      } else {
+        empty = 1;
+      }
+
+      if ((r + c) & 1) {
+        lightTile.setPosition({(float)r * 100, (float)c * 100});
+        window.draw(lightTile);
+
+      } else {
+        darkTile.setPosition({(float)r * 100, (float)c * 100});
+        window.draw(darkTile);
+      }
+
+      if (!empty) {
+        sf::Sprite tileSprite(tileTexture);
+        tileSprite.setPosition({(float)r * 100, (float)c * 100});
+        tileSprite.setScale({0.78125, 0.78125});
+        window.draw(tileSprite);
+      }
+    }
+  }
+
+  window.display();
+  current_move += 1;
+}
+}
+
+int main() {
+  drawBoard();
   return 0;
 }
