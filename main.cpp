@@ -53,7 +53,8 @@ const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
 const int MOVE_COUNT = 1000;
-const float TEMPERATURE = 1.5;
+const float TEMPERATURE = 3.5;
+const int GAME_MODE = 0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -421,16 +422,28 @@ void drawBoard() {
   darkTile.setFillColor(sf::Color(118, 150, 86));
 
   while (window.isOpen()) {
+
     while (const std::optional event = window.pollEvent()) {
       if (event->is<sf::Event::Closed>())
         window.close();
+
+      if (event->is<sf::Event::MouseButtonPressed>() &&
+          (GAME_MODE == 0 && (current_move % 2 == 0))) {
+        minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move & 1);
+        int current_score = getScore();
+        Move nextMove = Move(from, to, movedPiece, capturedPiece);
+        playMove(nextMove);
+        current_move += 1;
+      }
     }
 
-    if (current_move <= MOVE_COUNT) {
-      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move % 2 == 0);
+    if (current_move <= MOVE_COUNT && GAME_MODE == 1 ||
+        (GAME_MODE == 0 && (current_move % 2 == 1))) {
+      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move & 1);
       int current_score = getScore();
       Move nextMove = Move(from, to, movedPiece, capturedPiece);
       playMove(nextMove);
+      current_move += 1;
     }
 
     window.clear();
@@ -489,7 +502,6 @@ void drawBoard() {
     }
 
     window.display();
-    current_move += 1;
   }
 }
 
