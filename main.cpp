@@ -53,8 +53,10 @@ const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
 const int MOVE_COUNT = 1000;
-const float TEMPERATURE = 3.5;
+const float TEMPERATURE = 1.5;
+
 const int GAME_MODE = 0;
+const int BOARD_SIZE = 800;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -413,7 +415,8 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   }
 }
 
-void drawBoard() {
+int main() {
+  bool second_click = 0;
   int current_move = 0;
   sf::RenderWindow window(sf::VideoMode({800, 800}), "SFML window");
   sf::RectangleShape lightTile({100, 100});
@@ -429,18 +432,28 @@ void drawBoard() {
 
       if (event->is<sf::Event::MouseButtonPressed>() &&
           (GAME_MODE == 0 && (current_move % 2 == 0))) {
-        minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move & 1);
-        int current_score = getScore();
-        Move nextMove = Move(from, to, movedPiece, capturedPiece);
-        playMove(nextMove);
-        current_move += 1;
+
+        int r = (int)(7 - std::floor(sf::Mouse::getPosition(window).y / 100));
+        int c = (int)(7 - std::floor(sf::Mouse::getPosition(window).x / 100));
+
+        if (second_click) {
+          to = (1ULL << 8 * r) << c;
+          capturedPiece = findPiece(to);
+          Move nextMove = Move(from, to, movedPiece, capturedPiece);
+          playMove(nextMove);
+          current_move += 1;
+        } else {
+          from = (1ULL << 8 * r) << c;
+          movedPiece = findPiece(from);
+        }
+
+        second_click = !second_click;
       }
     }
 
     if (current_move <= MOVE_COUNT && GAME_MODE == 1 ||
         (GAME_MODE == 0 && (current_move % 2 == 1))) {
-      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move & 1);
-      int current_score = getScore();
+      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move % 2 == 0);
       Move nextMove = Move(from, to, movedPiece, capturedPiece);
       playMove(nextMove);
       current_move += 1;
@@ -452,33 +465,33 @@ void drawBoard() {
       for (int c = 0; c < 8; c++) {
 
         bool empty = 0;
-        uint64_t tile = (1ULL << r) << (c * 8);
+        uint64_t tile = (1ULL << (7 - r)) << ((7 - c) * 8);
         sf::Texture tileTexture;
 
         if (whitePawns & tile) {
-          tileTexture = blackPawnTexture;
-        } else if (blackPawns & tile) {
           tileTexture = whitePawnTexture;
+        } else if (blackPawns & tile) {
+          tileTexture = blackPawnTexture;
         } else if (whiteKnights & tile) {
-          tileTexture = blackKnightTexture;
-        } else if (blackKnights & tile) {
           tileTexture = whiteKnightTexture;
+        } else if (blackKnights & tile) {
+          tileTexture = blackKnightTexture;
         } else if (whiteBishops & tile) {
-          tileTexture = blackBishopTexture;
-        } else if (blackBishops & tile) {
           tileTexture = whiteBishopTexture;
+        } else if (blackBishops & tile) {
+          tileTexture = blackBishopTexture;
         } else if (whiteRooks & tile) {
-          tileTexture = blackRookTexture;
-        } else if (blackRooks & tile) {
           tileTexture = whiteRookTexture;
+        } else if (blackRooks & tile) {
+          tileTexture = blackRookTexture;
         } else if (whiteQueens & tile) {
-          tileTexture = blackQueenTexture;
-        } else if (blackQueens & tile) {
           tileTexture = whiteQueenTexture;
+        } else if (blackQueens & tile) {
+          tileTexture = blackQueenTexture;
         } else if (whiteKings & tile) {
-          tileTexture = blackKingTexture;
-        } else if (blackKings & tile) {
           tileTexture = whiteKingTexture;
+        } else if (blackKings & tile) {
+          tileTexture = blackKingTexture;
         } else {
           empty = 1;
         }
@@ -500,12 +513,7 @@ void drawBoard() {
         }
       }
     }
-
     window.display();
   }
-}
-
-int main() {
-  drawBoard();
   return 0;
 }
