@@ -4,6 +4,11 @@
 #include <random>
 #include <vector>
 
+sf::RenderWindow window(sf::VideoMode({800, 825}), "Chess");
+sf::RectangleShape lightTile({100, 100});
+sf::RectangleShape darkTile({100, 100});
+sf::RectangleShape statusBar({800, 25});
+
 const sf::Texture whitePawnTexture("pieces/white-pawn.png");
 const sf::Texture whiteKnightTexture("pieces/white-knight.png");
 const sf::Texture whiteBishopTexture("pieces/white-bishop.png");
@@ -52,11 +57,9 @@ const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
-const int MOVE_COUNT = 1000;
+const int MAX_MOVES = 1000;
 const float TEMPERATURE = 1.5;
-
 const int GAME_MODE = 0;
-const int BOARD_SIZE = 800;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -99,9 +102,9 @@ uint64_t *findPiece(uint64_t tile) {
 }
 
 int getScore() {
+  int score = 0;
   bool whiteKing = 0;
   bool blackKing = 0;
-  int score = 0;
 
   for (int r = 7; r >= 0; r--) {
     for (int c = 7; c >= 0; c--) {
@@ -142,44 +145,6 @@ int getScore() {
     score = INT_MAX;
   }
   return score + (distr(gen) * TEMPERATURE);
-}
-
-void printBoard() {
-  for (int r = 7; r >= 0; r--) {
-    for (int c = 7; c >= 0; c--) {
-
-      uint64_t tile = (1ULL << c) << (r * 8);
-
-      if (whitePawns & tile) {
-        std::cout << 'P' << ' ';
-      } else if (blackPawns & tile) {
-        std::cout << 'p' << ' ';
-      } else if (whiteKnights & tile) {
-        std::cout << 'N' << ' ';
-      } else if (blackKnights & tile) {
-        std::cout << 'n' << ' ';
-      } else if (whiteBishops & tile) {
-        std::cout << 'B' << ' ';
-      } else if (blackBishops & tile) {
-        std::cout << 'b' << ' ';
-      } else if (whiteRooks & tile) {
-        std::cout << 'R' << ' ';
-      } else if (blackRooks & tile) {
-        std::cout << 'r' << ' ';
-      } else if (whiteQueens & tile) {
-        std::cout << 'Q' << ' ';
-      } else if (blackQueens & tile) {
-        std::cout << 'q' << ' ';
-      } else if (whiteKings & tile) {
-        std::cout << 'K' << ' ';
-      } else if (blackKings & tile) {
-        std::cout << 'k' << ' ';
-      } else {
-        std::cout << '.' << ' ';
-      }
-    }
-    std::cout << "\n";
-  }
 }
 
 void generatePawnMoves(std::vector<Move> *moves, bool color,
@@ -415,15 +380,75 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   }
 }
 
-int main() {
-  bool second_click = 0;
-  int current_move = 0;
-  sf::RenderWindow window(sf::VideoMode({800, 800}), "SFML window");
-  sf::RectangleShape lightTile({100, 100});
-  sf::RectangleShape darkTile({100, 100});
+void renderBoard() {
   lightTile.setFillColor(sf::Color(238, 238, 210));
   darkTile.setFillColor(sf::Color(118, 150, 86));
+  statusBar.setFillColor(sf::Color(255, 255, 255));
+  window.clear();
 
+  for (int r = 0; r < 8; r++) {
+    for (int c = 0; c < 8; c++) {
+
+      bool empty = 0;
+      uint64_t tile = (1ULL << (7 - r)) << ((7 - c) * 8);
+      sf::Texture tileTexture;
+
+      if (whitePawns & tile) {
+        tileTexture = whitePawnTexture;
+      } else if (blackPawns & tile) {
+        tileTexture = blackPawnTexture;
+      } else if (whiteKnights & tile) {
+        tileTexture = whiteKnightTexture;
+      } else if (blackKnights & tile) {
+        tileTexture = blackKnightTexture;
+      } else if (whiteBishops & tile) {
+        tileTexture = whiteBishopTexture;
+      } else if (blackBishops & tile) {
+        tileTexture = blackBishopTexture;
+      } else if (whiteRooks & tile) {
+        tileTexture = whiteRookTexture;
+      } else if (blackRooks & tile) {
+        tileTexture = blackRookTexture;
+      } else if (whiteQueens & tile) {
+        tileTexture = whiteQueenTexture;
+      } else if (blackQueens & tile) {
+        tileTexture = blackQueenTexture;
+      } else if (whiteKings & tile) {
+        tileTexture = whiteKingTexture;
+      } else if (blackKings & tile) {
+        tileTexture = blackKingTexture;
+      } else {
+        empty = 1;
+      }
+
+      if ((r + c) & 1) {
+        lightTile.setPosition({(float)r * 100, (float)c * 100});
+        window.draw(lightTile);
+
+      } else {
+        darkTile.setPosition({(float)r * 100, (float)c * 100});
+        window.draw(darkTile);
+      }
+
+      if (!empty) {
+        sf::Sprite tileSprite(tileTexture);
+        tileSprite.setPosition({(float)r * 100, (float)c * 100});
+        tileSprite.setScale({0.78125, 0.78125});
+        window.draw(tileSprite);
+      }
+    }
+  }
+  statusBar.setPosition({((float)getScore() / 1) - 400, 800});
+  window.draw(statusBar);
+  window.display();
+}
+
+int main() {
+
+  renderBoard();
+
+  bool secondClick = 0;
+  int moveCount = 0;
   while (window.isOpen()) {
 
     while (const std::optional event = window.pollEvent()) {
@@ -431,89 +456,41 @@ int main() {
         window.close();
 
       if (event->is<sf::Event::MouseButtonPressed>() &&
-          (GAME_MODE == 0 && (current_move % 2 == 0))) {
+          (GAME_MODE == 0 && (moveCount % 2 == 0))) {
 
         int r = (int)(7 - std::floor(sf::Mouse::getPosition(window).y / 100));
         int c = (int)(7 - std::floor(sf::Mouse::getPosition(window).x / 100));
 
-        if (second_click) {
+        if (secondClick) {
           to = (1ULL << 8 * r) << c;
           capturedPiece = findPiece(to);
+          std::vector<Move> legalMoves = generateMoves(1);
           Move nextMove = Move(from, to, movedPiece, capturedPiece);
-          playMove(nextMove);
-          current_move += 1;
+          for (int i = 0; i < legalMoves.size(); i++) {
+            if (legalMoves[i].from == nextMove.from &&
+                legalMoves[i].to == nextMove.to) {
+              playMove(nextMove);
+              moveCount += 1;
+              renderBoard();
+            }
+          }
+
         } else {
           from = (1ULL << 8 * r) << c;
           movedPiece = findPiece(from);
         }
-
-        second_click = !second_click;
+        secondClick = !secondClick;
       }
     }
 
-    if (current_move <= MOVE_COUNT && GAME_MODE == 1 ||
-        (GAME_MODE == 0 && (current_move % 2 == 1))) {
-      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, current_move % 2 == 0);
+    if (moveCount <= MAX_MOVES && GAME_MODE == 1 ||
+        (GAME_MODE == 0 && (moveCount % 2 == 1))) {
+      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, moveCount % 2 == 0);
       Move nextMove = Move(from, to, movedPiece, capturedPiece);
       playMove(nextMove);
-      current_move += 1;
+      moveCount += 1;
+      renderBoard();
     }
-
-    window.clear();
-
-    for (int r = 0; r < 8; r++) {
-      for (int c = 0; c < 8; c++) {
-
-        bool empty = 0;
-        uint64_t tile = (1ULL << (7 - r)) << ((7 - c) * 8);
-        sf::Texture tileTexture;
-
-        if (whitePawns & tile) {
-          tileTexture = whitePawnTexture;
-        } else if (blackPawns & tile) {
-          tileTexture = blackPawnTexture;
-        } else if (whiteKnights & tile) {
-          tileTexture = whiteKnightTexture;
-        } else if (blackKnights & tile) {
-          tileTexture = blackKnightTexture;
-        } else if (whiteBishops & tile) {
-          tileTexture = whiteBishopTexture;
-        } else if (blackBishops & tile) {
-          tileTexture = blackBishopTexture;
-        } else if (whiteRooks & tile) {
-          tileTexture = whiteRookTexture;
-        } else if (blackRooks & tile) {
-          tileTexture = blackRookTexture;
-        } else if (whiteQueens & tile) {
-          tileTexture = whiteQueenTexture;
-        } else if (blackQueens & tile) {
-          tileTexture = blackQueenTexture;
-        } else if (whiteKings & tile) {
-          tileTexture = whiteKingTexture;
-        } else if (blackKings & tile) {
-          tileTexture = blackKingTexture;
-        } else {
-          empty = 1;
-        }
-
-        if ((r + c) & 1) {
-          lightTile.setPosition({(float)r * 100, (float)c * 100});
-          window.draw(lightTile);
-
-        } else {
-          darkTile.setPosition({(float)r * 100, (float)c * 100});
-          window.draw(darkTile);
-        }
-
-        if (!empty) {
-          sf::Sprite tileSprite(tileTexture);
-          tileSprite.setPosition({(float)r * 100, (float)c * 100});
-          tileSprite.setScale({0.78125, 0.78125});
-          window.draw(tileSprite);
-        }
-      }
-    }
-    window.display();
   }
   return 0;
 }
