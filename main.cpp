@@ -27,6 +27,8 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_int_distribution<> distr(1, 100);
 
+bool checkKingsafety = 0;
+
 uint64_t whitePawns = 0xff00;
 uint64_t whiteKnights = 0x42;
 uint64_t whiteBishops = 0x24;
@@ -58,7 +60,7 @@ const uint64_t RIGHT_FILE = 0x0101010101010101;
 
 const int MAX_DEPTH = 4;
 const int MAX_MOVES = 1000;
-const float TEMPERATURE = 1.5;
+const float TEMPERATURE = 1.0;
 const int GAME_MODE = 0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
@@ -138,13 +140,22 @@ int getScore() {
       }
     }
   }
+
   if (!whiteKing) {
-    score = -INT_MAX;
+    return INT_MIN;
+  } else if (!blackKing) {
+    return INT_MAX;
+  } else {
+    return (score + (distr(gen) * TEMPERATURE));
   }
-  if (!blackKing) {
-    score = INT_MAX;
+}
+
+void playMove(Move move) {
+  *(move.movedPiece) ^= move.from;
+  if (move.capturedPiece) {
+    *(move.capturedPiece) ^= move.to;
   }
-  return score + (distr(gen) * TEMPERATURE);
+  *(move.movedPiece) ^= move.to;
 }
 
 void generatePawnMoves(std::vector<Move> *moves, bool color,
@@ -319,20 +330,12 @@ std::vector<Move> generateMoves(bool color) {
   return moves;
 }
 
-void playMove(Move move) {
-  *(move.movedPiece) ^= move.from;
-  if (move.capturedPiece) {
-    *(move.capturedPiece) ^= move.to;
-  }
-  *(move.movedPiece) ^= move.to;
-}
-
 int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
   if (depth == 0) {
     return getScore();
   }
   if (maximizingPlayer) {
-    int maxEval = -INT_MAX;
+    int maxEval = INT_MIN;
     std::vector<Move> moves = generateMoves(maximizingPlayer);
 
     for (int i = 0; i < moves.size(); i++) {
@@ -340,7 +343,7 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
       int eval = minimax(depth - 1, alpha, beta, 0);
       playMove(moves[i]);
 
-      if ((depth == MAX_DEPTH) && (eval > maxEval)) {
+      if ((depth == MAX_DEPTH || checkKingsafety) && (eval > maxEval)) {
         from = moves[i].from;
         to = moves[i].to;
         movedPiece = moves[i].movedPiece;
@@ -363,7 +366,7 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
       int eval = minimax(depth - 1, alpha, beta, 1);
       playMove(moves[i]);
 
-      if ((depth == MAX_DEPTH) && (eval < minEval)) {
+      if ((depth == MAX_DEPTH || checkKingsafety) && (eval < minEval)) {
         from = moves[i].from;
         to = moves[i].to;
         movedPiece = moves[i].movedPiece;
@@ -464,17 +467,29 @@ int main() {
         if (secondClick) {
           to = (1ULL << 8 * r) << c;
           capturedPiece = findPiece(to);
-          std::vector<Move> legalMoves = generateMoves(1);
+          std::vector<Move> nextMoves = generateMoves(1);
           Move nextMove = Move(from, to, movedPiece, capturedPiece);
-          for (int i = 0; i < legalMoves.size(); i++) {
-            if (legalMoves[i].from == nextMove.from &&
-                legalMoves[i].to == nextMove.to) {
+          for (int i = 0; i < nextMoves.size(); i++) {
+            if (nextMoves[i].from == nextMove.from &&
+                nextMoves[i].to == nextMove.to) {
               playMove(nextMove);
-              moveCount += 1;
-              renderBoard();
+
+              checkKingsafety = 1;
+              minimax(1, INT_MIN, INT_MAX, 0);
+              Move responseMove = Move(from, to, movedPiece, capturedPiece);
+              playMove(responseMove);
+              checkKingsafety = 0;
+
+              if (getScore() != INT_MIN && getScore() != INT_MAX) {
+                playMove(responseMove);
+                renderBoard();
+                moveCount += 1;
+              } else {
+                playMove(responseMove);
+                playMove(nextMove);
+              }
             }
           }
-
         } else {
           from = (1ULL << 8 * r) << c;
           movedPiece = findPiece(from);
@@ -485,7 +500,7 @@ int main() {
 
     if (moveCount <= MAX_MOVES && GAME_MODE == 1 ||
         (GAME_MODE == 0 && (moveCount % 2 == 1))) {
-      minimax(MAX_DEPTH, -INT_MAX, INT_MAX, moveCount % 2 == 0);
+      minimax(MAX_DEPTH, INT_MIN, INT_MAX, moveCount % 2 == 0);
       Move nextMove = Move(from, to, movedPiece, capturedPiece);
       playMove(nextMove);
       moveCount += 1;
