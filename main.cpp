@@ -4,10 +4,9 @@
 #include <random>
 #include <vector>
 
-sf::RenderWindow window(sf::VideoMode({800, 825}), "Chess");
+sf::RenderWindow window(sf::VideoMode({800, 800}), "Chess");
 sf::RectangleShape lightTile({100, 100});
 sf::RectangleShape darkTile({100, 100});
-sf::RectangleShape statusBar({800, 25});
 
 const sf::Texture whitePawnTexture("pieces/white-pawn.png");
 const sf::Texture whiteKnightTexture("pieces/white-knight.png");
@@ -58,10 +57,10 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-const int MAX_DEPTH = 4;
-const int MAX_MOVES = 1000;
+const int MAX_DEPTH = 5;
+const int MAX_MOVES = 200;
+const int GAME_MODE = 1;
 const float TEMPERATURE = 1.0;
-const int GAME_MODE = 0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};
 
@@ -142,9 +141,9 @@ int getScore() {
   }
 
   if (!whiteKing) {
-    return INT_MIN;
+    return INT_MIN + 1;
   } else if (!blackKing) {
-    return INT_MAX;
+    return INT_MAX - 1;
   } else {
     return (score + (distr(gen) * TEMPERATURE));
   }
@@ -384,10 +383,9 @@ int minimax(int depth, int alpha, int beta, bool maximizingPlayer) {
 }
 
 void renderBoard() {
+  window.clear();
   lightTile.setFillColor(sf::Color(238, 238, 210));
   darkTile.setFillColor(sf::Color(118, 150, 86));
-  statusBar.setFillColor(sf::Color(255, 255, 255));
-  window.clear();
 
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
@@ -441,8 +439,6 @@ void renderBoard() {
       }
     }
   }
-  statusBar.setPosition({((float)getScore() / 1) - 400, 800});
-  window.draw(statusBar);
   window.display();
 }
 

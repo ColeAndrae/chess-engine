@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"/Users/cole/Desktop/chess/build/cmake_install.cmake"
+		"/Users/cole/Desktop/projects/chess/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

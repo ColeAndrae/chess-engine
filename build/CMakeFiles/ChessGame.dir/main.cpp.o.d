@@ -1,4 +1,5 @@
-CMakeFiles/ChessGame.dir/main.cpp.o: /Users/cole/Desktop/chess/main.cpp \
+CMakeFiles/ChessGame.dir/main.cpp.o: \
+  /Users/cole/Desktop/projects/chess/main.cpp \
   /opt/homebrew/include/SFML/Graphics.hpp \
   /opt/homebrew/include/SFML/Graphics/BlendMode.hpp \
   /opt/homebrew/include/SFML/Graphics/Export.hpp \
