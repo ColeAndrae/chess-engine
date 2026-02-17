@@ -57,9 +57,9 @@ const uint64_t SECOND_FILE = 0x4040404040404040;
 const uint64_t SEVENTH_FILE = 0x0202020202020202;
 const uint64_t RIGHT_FILE = 0x0101010101010101;
 
-const int MAX_DEPTH = 5;
+const int MAX_DEPTH = 4;
 const int MAX_MOVES = 200;
-const int GAME_MODE = 1;
+const int GAME_MODE = 0;
 const float TEMPERATURE = 1.0;
 
 std::vector<int> directions = {-8, 8, -1, 1, -9, 9, -7, 7};

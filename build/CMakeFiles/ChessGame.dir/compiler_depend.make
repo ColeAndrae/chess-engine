@@ -1032,7 +1032,6 @@ CMakeFiles/ChessGame.dir/main.cpp.o: /Users/cole/Desktop/projects/chess/main.cpp
   /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include/stdarg.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include/stddef.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include/stdint.h \
-  /Users/cole/Desktop/chess/main.cpp \
   /opt/homebrew/include/SFML/Config.hpp \
   /opt/homebrew/include/SFML/Graphics.hpp \
   /opt/homebrew/include/SFML/Graphics/BlendMode.hpp \
@@ -1210,8 +1209,6 @@ CMakeFiles/ChessGame.dir/main.cpp.o: /Users/cole/Desktop/projects/chess/main.cpp
 /opt/homebrew/include/SFML/Graphics.hpp:
 
 /opt/homebrew/include/SFML/Config.hpp:
-
-/Users/cole/Desktop/chess/main.cpp:
 
 /Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include/stdint.h:
 
